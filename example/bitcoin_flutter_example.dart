@@ -1,4 +1,4 @@
-import 'package:bitcoin_flutter/bitcoin_flutter.dart';
+import 'package:handshake_flutter/handshake_flutter.dart';
 import 'package:bip39/bip39.dart' as bip39;
 
 main() {

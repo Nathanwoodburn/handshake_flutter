@@ -635,7 +635,7 @@
       {
         "description": "Wrong network for keyPair",
         "exception": "Inconsistent network",
-        "network": "bitcoin",
+        "network": "handshake",
         "inputs": [
           {
             "txId": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff",

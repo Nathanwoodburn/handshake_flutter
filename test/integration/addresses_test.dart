@@ -19,7 +19,7 @@ rng(int number) {
 }
 
 main() {
-  group('bitcoinjs-lib (addresses)', () {
+  group('handshakejs-lib (addresses)', () {
     test('can generate a random address', () {
       final keyPair = ECPair.makeRandom(rng: rng);
       final address =

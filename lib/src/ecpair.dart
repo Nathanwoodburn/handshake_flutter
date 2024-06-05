@@ -5,39 +5,48 @@ import 'package:bip32/src/utils/wif.dart' as wif;
 import 'models/networks.dart';
 
 class ECPair {
-  Uint8List _d;
-  Uint8List _Q;
+  Uint8List? _d;
+  Uint8List? _Q;
   NetworkType network;
   bool compressed;
-  ECPair(Uint8List _d, Uint8List _Q, {network, compressed}) {
+  ECPair(Uint8List? _d, Uint8List? _Q, {network, compressed})
+      : network = network ?? handshake,
+        compressed = compressed ?? true {
     this._d = _d;
     this._Q = _Q;
-    this.network = network ?? bitcoin;
-    this.compressed = compressed ?? true;
+    this.network = network;
+    this.compressed = compressed;
   }
-  Uint8List get publicKey {
-    if (_Q == null) _Q = ecc.pointFromScalar(_d, compressed);
+  Uint8List? get publicKey {
+    if (_d == null) return null;
+    if (_Q == null) _Q = ecc.pointFromScalar(_d!, compressed);
     return _Q;
   }
 
-  Uint8List get privateKey => _d;
+  Uint8List? get privateKey => _d;
   String toWIF() {
     if (privateKey == null) {
       throw new ArgumentError('Missing private key');
     }
     return wif.encode(new wif.WIF(
-        version: network.wif, privateKey: privateKey, compressed: compressed));
+        version: network.wif, privateKey: privateKey!, compressed: compressed));
   }
 
   Uint8List sign(Uint8List hash) {
-    return ecc.sign(hash, privateKey);
+    if (_d == null) {
+      throw new ArgumentError('Missing private key');
+    }
+    return ecc.sign(hash, privateKey!);
   }
 
   bool verify(Uint8List hash, Uint8List signature) {
-    return ecc.verify(hash, publicKey, signature);
+    if (publicKey == null) {
+      throw new ArgumentError('Missing public key');
+    }
+    return ecc.verify(hash, publicKey!, signature);
   }
 
-  factory ECPair.fromWIF(String w, {NetworkType network}) {
+  factory ECPair.fromWIF(String w, {NetworkType? network}) {
     wif.WIF decoded = wif.decode(w);
     final version = decoded.version;
     // TODO support multi networks
@@ -46,8 +55,8 @@ class ECPair {
       nw = network;
       if (nw.wif != version) throw new ArgumentError('Invalid network version');
     } else {
-      if (version == bitcoin.wif) {
-        nw = bitcoin;
+      if (version == handshake.wif) {
+        nw = handshake;
       } else if (version == testnet.wif) {
         nw = testnet;
       } else {
@@ -58,7 +67,7 @@ class ECPair {
         compressed: decoded.compressed, network: nw);
   }
   factory ECPair.fromPublicKey(Uint8List publicKey,
-      {NetworkType network, bool compressed}) {
+      {NetworkType? network, bool? compressed}) {
     if (!ecc.isPoint(publicKey)) {
       throw new ArgumentError('Point is not on the curve');
     }
@@ -66,7 +75,7 @@ class ECPair {
         network: network, compressed: compressed);
   }
   factory ECPair.fromPrivateKey(Uint8List privateKey,
-      {NetworkType network, bool compressed}) {
+      {NetworkType? network, bool? compressed}) {
     if (privateKey.length != 32)
       throw new ArgumentError(
           'Expected property privateKey of type Buffer(Length: 32)');
@@ -76,7 +85,7 @@ class ECPair {
         network: network, compressed: compressed);
   }
   factory ECPair.makeRandom(
-      {NetworkType network, bool compressed, Function rng}) {
+      {NetworkType? network, bool? compressed, Function? rng}) {
     final rfunc = rng ?? _randomBytes;
     Uint8List d;
 //    int beginTime = DateTime.now().millisecondsSinceEpoch;

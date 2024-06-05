@@ -12,7 +12,7 @@ import '../lib/src/utils/script.dart' as bscript;
 import '../lib/src/payments/index.dart' show PaymentData;
 import '../lib/src/payments/p2pkh.dart';
 
-final NETWORKS = {'bitcoin': bitcoin, 'testnet': testnet};
+final NETWORKS = {'handshake': handshake, 'testnet': testnet};
 
 constructSign(f, TransactionBuilder txb) {
   final network = NETWORKS[f['network']];
@@ -81,7 +81,7 @@ main() {
     group('fromTransaction', () {
       (fixtures['valid']['build'] as List<dynamic>).forEach((f) {
         test('returns TransactionBuilder, with ${f['description']}', () {
-          final network = NETWORKS[f['network'] ?? 'bitcoin'];
+          final network = NETWORKS[f['network'] ?? 'handshake'];
           final tx = Transaction.fromHex(f['txHex']);
           final txb = TransactionBuilder.fromTransaction(tx, network);
           final txAfter =
@@ -265,7 +265,7 @@ main() {
       String data2;
       setUp(() {
         txb = new TransactionBuilder();
-        data = 'Hey this is a random string without Bitcoins.';
+        data = 'Hey this is a random string without handshakes.';
         data2 = 'And this is another string.';
       });
       test('accepts a ScriptPubKey', () {
@@ -277,7 +277,9 @@ main() {
       });
       test('throws if too much data is provided', () {
         try {
-          expect(txb.addOutputData('aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
+          expect(
+              txb.addOutputData(
+                  'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa'),
               isArgumentError);
         } catch (err) {
           expect((err as ArgumentError).message,
@@ -296,12 +298,12 @@ main() {
         expect(txb.addOutputData(data), 0);
       });
       test('add second output after signed first input with SIGHASH_SINGLE',
-              () {
-            txb.addInput(txHash, 0);
-            txb.addOutputData(data);
-            txb.sign(vin: 0, keyPair: keyPair, hashType: SIGHASH_SINGLE);
-            expect(txb.addOutputData(data2), 1);
-          });
+          () {
+        txb.addInput(txHash, 0);
+        txb.addOutputData(data);
+        txb.sign(vin: 0, keyPair: keyPair, hashType: SIGHASH_SINGLE);
+        expect(txb.addOutputData(data2), 1);
+      });
       test('add first output after signed first input with SIGHASH_SINGLE', () {
         txb.addInput(txHash, 0);
         txb.sign(vin: 0, keyPair: keyPair, hashType: SIGHASH_SINGLE);
@@ -314,17 +316,17 @@ main() {
       });
       test(
           'throws if SIGHASH_ALL has been used to sign any existing scriptSigs',
-              () {
-            txb.addInput(txHash, 0);
-            txb.addOutputData(data);
-            txb.sign(vin: 0, keyPair: keyPair);
-            try {
-              expect(txb.addOutputData(data2), isArgumentError);
-            } catch (err) {
-              expect((err as ArgumentError).message,
-                  'No, this would invalidate signatures');
-            }
-          });
+          () {
+        txb.addInput(txHash, 0);
+        txb.addOutputData(data);
+        txb.sign(vin: 0, keyPair: keyPair);
+        try {
+          expect(txb.addOutputData(data2), isArgumentError);
+        } catch (err) {
+          expect((err as ArgumentError).message,
+              'No, this would invalidate signatures');
+        }
+      });
     });
     group('setLockTime', () {
       test('throws if if there exist any scriptSigs', () {

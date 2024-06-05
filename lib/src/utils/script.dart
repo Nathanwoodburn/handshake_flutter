@@ -11,14 +11,14 @@ final OP_INT_BASE = OPS['OP_RESERVED'];
 final ZERO = Uint8List.fromList([0]);
 
 Uint8List compile(List<dynamic> chunks) {
-  final bufferSize = chunks.fold(0, (acc, chunk) {
+  final bufferSize = chunks.fold(0, (num acc, chunk) {
     if (chunk is int) return acc + 1;
     if (chunk.length == 1 && asMinimalOP(chunk) != null) {
       return acc + 1;
     }
     return acc + pushData.encodingLength(chunk.length) + chunk.length;
   });
-  var buffer = new Uint8List(bufferSize);
+  var buffer = new Uint8List(bufferSize.toInt());
 
   var offset = 0;
   chunks.forEach((chunk) {
@@ -33,8 +33,8 @@ Uint8List compile(List<dynamic> chunks) {
       }
       pushData.EncodedPushData epd =
           pushData.encode(buffer, chunk.length, offset);
-      offset += epd.size;
-      buffer = epd.buffer;
+      offset += epd.size!;
+      buffer = epd.buffer!;
       buffer.setRange(offset, offset + chunk.length, chunk);
       offset += chunk.length;
       // opcode
@@ -49,7 +49,7 @@ Uint8List compile(List<dynamic> chunks) {
   return buffer;
 }
 
-List<dynamic> decompile(dynamic buffer) {
+List<dynamic>? decompile(dynamic buffer) {
   List<dynamic> chunks = [];
 
   if (buffer == null) return chunks;
@@ -65,13 +65,13 @@ List<dynamic> decompile(dynamic buffer) {
 
       // did reading a pushDataInt fail?
       if (d == null) return null;
-      i += d.size;
+      i += d.size!;
 
       // attempt to read too much data?
-      if (i + d.number > buffer.length) return null;
+      if (i + d.number! > buffer.length) return null;
 
-      final data = buffer.sublist(i, i + d.number);
-      i += d.number;
+      final data = buffer.sublist(i, i + d.number!);
+      i += d.number!;
 
       // decompile minimally
       final op = asMinimalOP(data);
@@ -98,13 +98,14 @@ Uint8List fromASM(String asm) {
   }).toList());
 }
 
-String toASM(List<dynamic> c) {
-  List<dynamic> chunks;
+String? toASM(List<dynamic> c) {
+  List<dynamic>? chunks;
   if (c is Uint8List) {
     chunks = decompile(c);
   } else {
     chunks = c;
   }
+  if (chunks == null) return null;
   return chunks.map((chunk) {
     // data?
     if (chunk is Uint8List) {
@@ -117,10 +118,10 @@ String toASM(List<dynamic> c) {
   }).join(' ');
 }
 
-int asMinimalOP(Uint8List buffer) {
+int? asMinimalOP(Uint8List buffer) {
   if (buffer.length == 0) return OPS['OP_0'];
   if (buffer.length != 1) return null;
-  if (buffer[0] >= 1 && buffer[0] <= 16) return OP_INT_BASE + buffer[0];
+  if (buffer[0] >= 1 && buffer[0] <= 16) return OP_INT_BASE! + buffer[0];
   if (buffer[0] == 0x81) return OPS['OP_1NEGATE'];
   return null;
 }
@@ -166,8 +167,8 @@ bool bip66check(buffer) {
 }
 
 Uint8List bip66encode(r, s) {
-  var lenR = r.length;
-  var lenS = s.length;
+  int lenR = r.length;
+  int lenS = s.length;
   if (lenR == 0) throw new ArgumentError('R length is zero');
   if (lenS == 0) throw new ArgumentError('S length is zero');
   if (lenR > 33) throw new ArgumentError('R length is too long');

@@ -1,9 +1,9 @@
-import 'package:bitcoin_flutter/bitcoin_flutter.dart';
+import 'package:handshake_flutter/handshake_flutter.dart';
 import 'package:test/test.dart';
 import 'package:bip39/bip39.dart' as bip39;
 
 void main() {
-  group('bitcoin-dart (HDWallet)', () {
+  group('handshake-dart (HDWallet)', () {
     var seed = bip39.mnemonicToSeed(
         'praise you muffin lion enable neck grocery crumble super myself license ghost');
     HDWallet hdWallet = new HDWallet.fromSeed(seed);
